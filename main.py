@@ -124,7 +124,7 @@ while not done:
             pygame.draw.line(screen, GREY, [0, hl_idx], [w_width - 1, hl_idx], 5)
             color = WHITE
             if world[i][j] == 1:
-                # print(f'{i}:{j} - {get_neighbors_set(i, j)}')
+                print(f'{i}:{j} - {get_neighbors_set(i, j)}')
                 color = BLACK
             pygame.draw.rect(screen, color,
                              [(margin + c_width) * j + margin,
