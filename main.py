@@ -1,6 +1,9 @@
 import math
 import random
 import pygame
+from stills import *
+from oscillators import *
+from spaceships import *
 
 BLACK = (0, 0, 0)
 GREY = (120, 120, 120)
@@ -9,8 +12,9 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 YELLOW = (127, 127, 0)
 RED = (255, 0, 0)
-WORLD_SIZE = 21
-assert WORLD_SIZE >= 4
+WORLD_SIZE = 20
+SEED_SIZE = 6
+assert WORLD_SIZE >= SEED_SIZE >= 4
 c_width = c_height = 20
 margin = 5
 w_width = (c_width * WORLD_SIZE) + (margin * (WORLD_SIZE + 1))
@@ -18,37 +22,11 @@ w_height = (c_height * WORLD_SIZE) + (margin * (WORLD_SIZE + 1))
 size = (w_width, w_height)
 
 
-init_world = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-]
+def generate_world_row(row_len=WORLD_SIZE):
+    return [round(random.random()) for x in range(row_len)]
 
 
-def generate_world_row():
-    global WORLD_SIZE
-    return [round(random.random()) for x in range(WORLD_SIZE)]
-
-
-def get_next_state(world):
+def get_next_state(cur_world):
     global WORLD_SIZE
     new_state = [[0] * WORLD_SIZE for x in range(WORLD_SIZE)]
     for i in range(WORLD_SIZE):
@@ -56,10 +34,10 @@ def get_next_state(world):
             neighbors = get_neighbors_set(i, j)
             live_neighbors = 0
             for n in neighbors:
-                live_neighbors += world[n[0]][n[1]]
-            if not world[i][j] and live_neighbors == 3:
+                live_neighbors += cur_world[n[0]][n[1]]
+            if not cur_world[i][j] and live_neighbors == 3:
                 new_state[i][j] = 1
-            elif world[i][j] and 2 <= live_neighbors <= 3:
+            elif cur_world[i][j] and 2 <= live_neighbors <= 3:
                 new_state[i][j] = 1
             else:
                 new_state[i][j] = 0
@@ -90,6 +68,33 @@ def get_neighbors_set(x, y):
     return neighbors
 
 
+def init_pattern(pattern):
+    if hasattr(pattern, 'PATTERN') and hasattr(pattern, 'GRID_SIZE'):
+        init_grid = pattern.PATTERN
+        return inflate_world(init_grid, pattern.GRID_SIZE)
+    return None
+
+
+def inflate_world(subworld, init_grid=None):
+    init_x = len(subworld[0])
+    init_y = len(subworld)
+    x_diff = WORLD_SIZE - init_grid[0] if init_grid and type(init_grid) == tuple else WORLD_SIZE - init_x
+    y_diff = WORLD_SIZE - init_grid[1] if init_grid and type(init_grid) == tuple else WORLD_SIZE - init_y
+    for row in subworld:
+        if x_diff and len(row) < WORLD_SIZE:
+            row += [0] * x_diff
+    if y_diff:
+        while len(subworld) < WORLD_SIZE:
+            subworld.append([0] * WORLD_SIZE)
+    return subworld
+
+
+def init_world(seed_size):
+    seed_world = [[0] * (seed_size + 1)]
+    seed_world += [[0] + generate_world_row(seed_size) for x in range(seed_size)]
+    return inflate_world(seed_world, (seed_size + 1, seed_size + 1  ))
+
+
 pygame.init()
 
 screen = pygame.display.set_mode(size)
@@ -97,9 +102,11 @@ pygame.display.set_caption("Game of Life")
 done = False
 run = False
 clock = pygame.time.Clock()
-world = init_world if init_world else [generate_world_row() for x in range(WORLD_SIZE)]
+
+world = init_world(SEED_SIZE)
 
 while not done:
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
@@ -108,12 +115,25 @@ while not done:
             target_x = math.floor(pos_x / (margin + c_width))
             target_y = math.floor(pos_y / (margin + c_height))
             world[target_y][target_x] = math.fabs(world[target_y][target_x] - 1)
-            print(f'Clicked pos {pos_x}:{pos_y} which should be cell ({target_x}, {target_y})')
+            # print(f'Clicked pos {pos_x}:{pos_y} which should be cell ({target_x}, {target_y})')
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 run = not run
             if event.key == pygame.K_TAB:
-                world = init_world
+                world = init_world(SEED_SIZE)
+            if event.key == pygame.K_g:
+                world = init_pattern(Glider())
+            if event.key == pygame.K_l:
+                world = init_pattern(LWSS())
+            if event.key == pygame.K_m:
+                world = init_pattern(MWSS())
+            if event.key == pygame.K_h:
+                world = init_pattern(HWSS())
+
+    assert world is not None
+    print (f'{len(world)}:{len(world[0])}')
+    assert len(world) == WORLD_SIZE
+    assert len(world[0]) == WORLD_SIZE
 
     screen.fill(WHITE)
     for i in range(WORLD_SIZE):
@@ -124,7 +144,7 @@ while not done:
             pygame.draw.line(screen, GREY, [0, hl_idx], [w_width - 1, hl_idx], 5)
             color = WHITE
             if world[i][j] == 1:
-                print(f'{i}:{j} - {get_neighbors_set(i, j)}')
+                # print(f'{i}:{j} - {get_neighbors_set(i, j)}')
                 color = BLACK
             pygame.draw.rect(screen, color,
                              [(margin + c_width) * j + margin,
