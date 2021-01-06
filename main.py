@@ -4,15 +4,16 @@ import pygame
 from stills import *
 from oscillators import *
 from spaceships import *
+from grid import Grid
 
 BLACK = (0, 0, 0)
-GREY = (120, 120, 120)
+GREY = (140, 140, 140)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
+GREEN = (200, 255, 200)
 YELLOW = (127, 127, 0)
-RED = (255, 0, 0)
-WORLD_SIZE = 20
+RED = (255, 200, 200)
+WORLD_SIZE = 30
 SEED_SIZE = 6
 assert WORLD_SIZE >= SEED_SIZE >= 4
 c_width = c_height = 20
@@ -92,7 +93,7 @@ def inflate_world(subworld, init_grid=None):
 def init_world(seed_size):
     seed_world = [[0] * (seed_size + 1)]
     seed_world += [[0] + generate_world_row(seed_size) for x in range(seed_size)]
-    return inflate_world(seed_world, (seed_size + 1, seed_size + 1  ))
+    return inflate_world(seed_world, (seed_size + 1, seed_size + 1))
 
 
 pygame.init()
@@ -103,8 +104,10 @@ done = False
 run = False
 clock = pygame.time.Clock()
 
-world = init_world(SEED_SIZE)
-
+world = Grid(WORLD_SIZE)
+world.init_glider()
+clock.tick(1)
+pygame.display.flip()
 while not done:
 
     for event in pygame.event.get():
@@ -112,48 +115,46 @@ while not done:
             done = True
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos_x, pos_y = pygame.mouse.get_pos()
-            target_x = math.floor(pos_x / (margin + c_width))
-            target_y = math.floor(pos_y / (margin + c_height))
-            world[target_y][target_x] = math.fabs(world[target_y][target_x] - 1)
-            # print(f'Clicked pos {pos_x}:{pos_y} which should be cell ({target_x}, {target_y})')
+            target_y = math.floor(pos_x / (margin + c_width))
+            target_x = math.floor(pos_y / (margin + c_height))
+            world.flip(target_x, target_y)
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 run = not run
             if event.key == pygame.K_TAB:
-                world = init_world(SEED_SIZE)
+                world.init_glider()
+            if event.key == pygame.K_ESCAPE:
+                world.clear()
             if event.key == pygame.K_g:
-                world = init_pattern(Glider())
+                world.init_glider()
             if event.key == pygame.K_l:
-                world = init_pattern(LWSS())
+                world.init_lwss()
             if event.key == pygame.K_m:
-                world = init_pattern(MWSS())
+                world.init_mwss()
             if event.key == pygame.K_h:
-                world = init_pattern(HWSS())
+                world.init_hwss()
 
     assert world is not None
-    print (f'{len(world)}:{len(world[0])}')
-    assert len(world) == WORLD_SIZE
-    assert len(world[0]) == WORLD_SIZE
 
     screen.fill(WHITE)
-    for i in range(WORLD_SIZE):
+    for i in range(world.size + 1):
         vl_idx = (margin * i) + (c_height * i)
-        pygame.draw.line(screen, GREY, [vl_idx, 0], [vl_idx, w_height - 1], 5)
-        for j in range(WORLD_SIZE):
+        pygame.draw.line(screen, GREY, [vl_idx + (margin / 2.0), 0], [vl_idx + (margin / 2.0), w_height], margin)
+        for j in range(world.size + 1):
             hl_idx = (margin * j) + (c_width * j)
-            pygame.draw.line(screen, GREY, [0, hl_idx], [w_width - 1, hl_idx], 5)
-            color = WHITE
-            if world[i][j] == 1:
-                # print(f'{i}:{j} - {get_neighbors_set(i, j)}')
+            pygame.draw.line(screen, GREY, [0, hl_idx + (margin / 2.0)], [w_width, hl_idx + (margin / 2.0)], margin)
+            color = GREEN if run else RED
+            if world.get(i, j):
                 color = BLACK
             pygame.draw.rect(screen, color,
                              [(margin + c_width) * j + margin,
                               (margin + c_height) * i + margin,
                               c_width, c_height])
-    clock.tick(4)
-    pygame.display.flip()
+
     if run:
-        new_world = get_next_state(world)
-        world = new_world
+        world.get_next_state()
+
+    clock.tick(6)
+    pygame.display.flip()
 
 pygame.quit()
