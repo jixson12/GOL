@@ -9,10 +9,23 @@ class Grid:
         self.size = size
         self._coo_matrix = {}
 
-    def init_pattern(self, pattern, x_offset=0, y_offset=0):
+    def init_pattern(self, pattern, x_offset=0, y_offset=0, rotation=None, flipped=False):
         if hasattr(pattern, 'CELLS'):
-            for cell in pattern.CELLS:
+            cells = pattern.CELLS
+            if rotation and rotation != '0':
+                cells = self.rotate_pattern(pattern, rotation)
+            if flipped:
+                cells = self.flip_cells(cells)
+            for cell in cells:
                 self.set(cell[0] + x_offset, cell[1] + y_offset, 1)
+
+    @staticmethod
+    def flip_cells(cells):
+        raise NotImplementedError
+
+    @staticmethod
+    def rotate_pattern(pattern):
+        raise NotImplementedError
 
     def init_glider(self):
         self.init_pattern(Glider)

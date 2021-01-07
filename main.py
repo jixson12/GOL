@@ -67,19 +67,21 @@ def main():
         run = True
 
     def place_callback():
-        nonlocal pat_var
-        print(f'Place {pat_var.get()}')
-        world.init_pattern(PATTERNS[pat_var.get()], x_offset=WORLD_SIZE / 2, y_offset=WORLD_SIZE / 2)
+        nonlocal pat_var, x_var, y_var, flip_var, deg_var
+        pattern = pat_var.get()
+        x_ofst = int(x_var.get())
+        y_ofst = int(y_var.get())
+        flipped = bool(flip_var.get())
+        degrees = deg_var.get()
+        print(f'Place {pattern} at offset ({x_ofst}:{y_ofst}); rotation {degrees}; flipped {flipped}')
+        world.init_pattern(PATTERNS[pat_var.get()], x_offset=(WORLD_SIZE / 2) - x_ofst,
+                           y_offset=(WORLD_SIZE / 2) + y_ofst, rotation=degrees, flipped=flipped)
 
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", quit_callback)
     root.title("Controls of Life")
 
     main_dialog = tk.Frame(root)
-    main_dialog.columnconfigure(0, weight=1)
-    main_dialog.columnconfigure(1, weight=3)
-    main_dialog.columnconfigure(2, weight=1)
-    main_dialog.columnconfigure(3, weight=3)
     tk.Label(main_dialog, text='X:').grid(row=0, column=0)
     x_var = tk.StringVar()
     x_field = tk.Entry(main_dialog, width=3, textvariable=x_var)
@@ -90,14 +92,18 @@ def main():
     y_field = tk.Entry(main_dialog, width=3, textvariable=y_var)
     y_field.insert(0, 0)
     y_field.grid(row=0, column=3)
+    flip_var = tk.StringVar(main_dialog, 'False')
+    flip_radio = tk.Radiobutton(main_dialog, text='Flipped', variable=flip_var, value='True')
+    flip_radio.grid(row=0, column=4)
 
+    tk.Label(main_dialog, text='Pattern: ').grid(row=1, column=0)
     pat_var = tk.StringVar()
     pat_var.set(list(PATTERNS.keys())[0])
     pat_dd = tk.OptionMenu(main_dialog, pat_var, *PATTERNS.keys())
-    pat_dd.grid(row=1, column=0)
+    pat_dd.grid(row=1, column=1)
     deg_var = tk.StringVar()
     deg_var.set('0')
-    deg_dd = tk.OptionMenu(main_dialog, deg_var, ['0', '90', '180', '270'])
+    deg_dd = tk.OptionMenu(main_dialog, deg_var, '0', '90', '180', '270')
     deg_dd.grid(row=1, column=2)
     tk.Label(main_dialog, text='degrees').grid(row=1, column=3)
 
