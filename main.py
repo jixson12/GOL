@@ -2,10 +2,12 @@ import math
 import random
 import pygame
 import tkinter
-from stills import *
-from oscillators import *
-from spaceships import *
+
+import constants
 from grid import Grid
+from patterns.stills import *
+from patterns.oscillators import *
+from patterns.spaceships import *
 
 # Init some colors
 BLACK = (0, 0, 0)
@@ -15,6 +17,10 @@ BLUE = (0, 0, 255)
 GREEN = (200, 255, 200)
 YELLOW = (127, 127, 0)
 RED = (255, 200, 200)
+
+PATTERNS = {'Glider': Glider, 'LWSS': LWSS, 'MWSS': MWSS, 'HWSS': HWSS,
+            'Blinker': Blinker, 'Toad': Toad, 'Beacon': Beacon, 'Pulsar': Pulsar, 'PentaDecathlon': PentaDecathlon,
+            'Block': Block, 'Beehive': Beehive, 'Loaf': Loaf, 'Boat': Boat, 'Tub': Tub}
 
 # Define world size
 WORLD_SIZE = 60
@@ -32,13 +38,9 @@ size = (w_width, w_height)
 done = False
 
 
-def quit_callback():
-    global done
-    done = True
-
-
 def main():
-    global done
+    global BLACK, GREY, WHITE, BLUE, GREEN, YELLOW, RED, WORLD_SIZE, PATTERNS, \
+        c_width, c_height, margin, w_width, w_height, size, done
     run = False
 
     # Init pygame
@@ -47,18 +49,46 @@ def main():
     pygame.display.set_caption("Game of Life")
     clock = pygame.time.Clock()
     world = Grid(WORLD_SIZE)
-    world.init_glider()
-    clock.tick(1)
-    pygame.display.flip()
+    # world.init_glider()
 
     # Init tkinter
+    def quit_callback():
+        global done
+        done = True
+
     root = tkinter.Tk()
     root.protocol("WM_DELETE_WINDOW", quit_callback)
     main_dialog = tkinter.Frame(root)
-    root.title("Test dialog")
-    status_line = tkinter.Label(main_dialog, text="Test String", bd=1, relief=tkinter.SUNKEN, anchor=tkinter.W)
-    status_line.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+    root.title("Controls of Life")
+    dd_var = tkinter.StringVar()
+    dd_var.set(list(PATTERNS.keys())[0])
+    dropdown = tkinter.OptionMenu(root, dd_var, *PATTERNS.keys())
+    dropdown.pack()
+
+    def stop_callback():
+        nonlocal run
+        print('Stop')
+        run = False
+
+    def start_callback():
+        nonlocal run
+        print('Start')
+        run = True
+
+    def place_callback():
+        print(f'Place {dd_var.get()}')
+        world.init_pattern(PATTERNS[dd_var.get()])
+
+    stop = tkinter.Button(root, text="Stop", command=stop_callback)
+    button = tkinter.Button(root, text="Place", command=place_callback)
+    start = tkinter.Button(root, text="Start", command=start_callback)
+    stop.pack()
+    button.pack()
+    start.pack()
+
     main_dialog.pack()
+    clock.tick()
+    pygame.display.flip()
 
     try:
         main_dialog.update()
@@ -68,7 +98,7 @@ def main():
     while not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                quit_callback()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
                 # Pivoted because origin is the top left corner
@@ -77,19 +107,10 @@ def main():
                 world.flip(target_x, target_y)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    run = not run
-                if event.key == pygame.K_TAB:
-                    world.init_glider()
+                    stop_callback() if run else start_callback()
                 if event.key == pygame.K_ESCAPE:
+                    print('Clear')
                     world.clear()
-                if event.key == pygame.K_g:
-                    world.init_glider()
-                if event.key == pygame.K_l:
-                    world.init_lwss()
-                if event.key == pygame.K_m:
-                    world.init_mwss()
-                if event.key == pygame.K_h:
-                    world.init_hwss()
 
         assert world is not None
 
@@ -111,13 +132,13 @@ def main():
 
         if run:
             world.get_next_state()
-
-        clock.tick(6)
-        pygame.display.flip()
         try:
             main_dialog.update()
         except:
             print("dialog error")
+
+        clock.tick(6)
+        pygame.display.flip()
 
     pygame.quit()
     main_dialog.destroy()

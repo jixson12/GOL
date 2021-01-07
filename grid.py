@@ -1,6 +1,6 @@
 import random
 from collections import OrderedDict
-from spaceships import Glider, LWSS, MWSS, HWSS
+from patterns.spaceships import Glider, LWSS, MWSS, HWSS
 
 
 class Grid:
@@ -9,21 +9,22 @@ class Grid:
         self.size = size
         self._coo_matrix = {}
 
+    def init_pattern(self, pattern):
+        if hasattr(pattern, 'CELLS'):
+            for cell in pattern.CELLS:
+                self.set(cell[0], cell[1], 1)
+
     def init_glider(self):
-        for cell in Glider.CELLS:
-            self.set(cell[0], cell[1], 1)
+        self.init_pattern(Glider)
 
     def init_lwss(self):
-        for cell in LWSS.CELLS:
-            self.set(cell[0], cell[1], 1)
+        self.init_pattern(LWSS)
 
     def init_mwss(self):
-        for cell in MWSS.CELLS:
-            self.set(cell[0], cell[1], 1)
+        self.init_pattern(MWSS)
 
     def init_hwss(self):
-        for cell in HWSS.CELLS:
-            self.set(cell[0], cell[1], 1)
+        self.init_pattern(HWSS)
 
     def clear(self):
         self._coo_matrix = {}
