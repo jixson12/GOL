@@ -1,7 +1,7 @@
 import math
 import random
 import pygame
-import tkinter
+import tkinter as tk
 
 import constants
 from grid import Grid
@@ -51,18 +51,18 @@ def main():
     world = Grid(WORLD_SIZE)
     # world.init_glider()
 
-    # Init tkinter
+    # Init tk
     def quit_callback():
         global done
         done = True
 
-    root = tkinter.Tk()
+    root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", quit_callback)
-    main_dialog = tkinter.Frame(root)
+    main_dialog = tk.Frame(root)
     root.title("Controls of Life")
-    dd_var = tkinter.StringVar()
+    dd_var = tk.StringVar()
     dd_var.set(list(PATTERNS.keys())[0])
-    dropdown = tkinter.OptionMenu(root, dd_var, *PATTERNS.keys())
+    dropdown = tk.OptionMenu(root, dd_var, *PATTERNS.keys())
     dropdown.pack()
 
     def stop_callback():
@@ -79,13 +79,17 @@ def main():
         print(f'Place {dd_var.get()}')
         world.init_pattern(PATTERNS[dd_var.get()])
 
-    stop = tkinter.Button(root, text="Stop", command=stop_callback)
-    button = tkinter.Button(root, text="Place", command=place_callback)
-    start = tkinter.Button(root, text="Start", command=start_callback)
-    stop.pack()
-    button.pack()
-    start.pack()
-
+    frame = tk.Frame(root)
+    frame.pack(fill=tk.X, side=tk.BOTTOM)
+    stop = tk.Button(frame, text="Stop", command=stop_callback)
+    button = tk.Button(frame, text="Place", command=place_callback)
+    start = tk.Button(frame, text="Start", command=start_callback)
+    frame.columnconfigure(0, weight=1)
+    frame.columnconfigure(1, weight=2)
+    frame.columnconfigure(2, weight=1)
+    stop.grid(row=0, column=0, sticky=tk.W+tk.E)
+    button.grid(row=0, column=1, sticky=tk.W+tk.E)
+    start.grid(row=0, column=2, sticky=tk.W+tk.E)
     main_dialog.pack()
     clock.tick()
     pygame.display.flip()
