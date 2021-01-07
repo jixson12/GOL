@@ -9,10 +9,10 @@ class Grid:
         self.size = size
         self._coo_matrix = {}
 
-    def init_pattern(self, pattern):
+    def init_pattern(self, pattern, x_offset=0, y_offset=0):
         if hasattr(pattern, 'CELLS'):
             for cell in pattern.CELLS:
-                self.set(cell[0], cell[1], 1)
+                self.set(cell[0] + x_offset, cell[1] + y_offset, 1)
 
     def init_glider(self):
         self.init_pattern(Glider)

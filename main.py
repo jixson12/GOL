@@ -56,15 +56,6 @@ def main():
         global done
         done = True
 
-    root = tk.Tk()
-    root.protocol("WM_DELETE_WINDOW", quit_callback)
-    main_dialog = tk.Frame(root)
-    root.title("Controls of Life")
-    dd_var = tk.StringVar()
-    dd_var.set(list(PATTERNS.keys())[0])
-    dropdown = tk.OptionMenu(root, dd_var, *PATTERNS.keys())
-    dropdown.pack()
-
     def stop_callback():
         nonlocal run
         print('Stop')
@@ -76,20 +67,51 @@ def main():
         run = True
 
     def place_callback():
-        print(f'Place {dd_var.get()}')
-        world.init_pattern(PATTERNS[dd_var.get()])
+        nonlocal pat_var
+        print(f'Place {pat_var.get()}')
+        world.init_pattern(PATTERNS[pat_var.get()], x_offset=WORLD_SIZE / 2, y_offset=WORLD_SIZE / 2)
 
-    frame = tk.Frame(root)
-    frame.pack(fill=tk.X, side=tk.BOTTOM)
-    stop = tk.Button(frame, text="Stop", command=stop_callback)
-    button = tk.Button(frame, text="Place", command=place_callback)
-    start = tk.Button(frame, text="Start", command=start_callback)
-    frame.columnconfigure(0, weight=1)
-    frame.columnconfigure(1, weight=2)
-    frame.columnconfigure(2, weight=1)
-    stop.grid(row=0, column=0, sticky=tk.W+tk.E)
-    button.grid(row=0, column=1, sticky=tk.W+tk.E)
-    start.grid(row=0, column=2, sticky=tk.W+tk.E)
+    root = tk.Tk()
+    root.protocol("WM_DELETE_WINDOW", quit_callback)
+    root.title("Controls of Life")
+
+    main_dialog = tk.Frame(root)
+    main_dialog.columnconfigure(0, weight=1)
+    main_dialog.columnconfigure(1, weight=3)
+    main_dialog.columnconfigure(2, weight=1)
+    main_dialog.columnconfigure(3, weight=3)
+    tk.Label(main_dialog, text='X:').grid(row=0, column=0)
+    x_var = tk.StringVar()
+    x_field = tk.Entry(main_dialog, width=3, textvariable=x_var)
+    x_field.insert(0, 0)
+    x_field.grid(row=0, column=1)
+    tk.Label(main_dialog, text='Y:').grid(row=0, column=2)
+    y_var = tk.StringVar()
+    y_field = tk.Entry(main_dialog, width=3, textvariable=y_var)
+    y_field.insert(0, 0)
+    y_field.grid(row=0, column=3)
+
+    pat_var = tk.StringVar()
+    pat_var.set(list(PATTERNS.keys())[0])
+    pat_dd = tk.OptionMenu(main_dialog, pat_var, *PATTERNS.keys())
+    pat_dd.grid(row=1, column=0)
+    deg_var = tk.StringVar()
+    deg_var.set('0')
+    deg_dd = tk.OptionMenu(main_dialog, deg_var, ['0', '90', '180', '270'])
+    deg_dd.grid(row=1, column=2)
+    tk.Label(main_dialog, text='degrees').grid(row=1, column=3)
+
+    button_frame = tk.Frame(root)
+    button_frame.pack(fill=tk.X, side=tk.BOTTOM)
+    stop = tk.Button(button_frame, text="Stop", command=stop_callback)
+    button = tk.Button(button_frame, text="Place", command=place_callback)
+    start = tk.Button(button_frame, text="Start", command=start_callback)
+    button_frame.columnconfigure(0, weight=1)
+    button_frame.columnconfigure(1, weight=2)
+    button_frame.columnconfigure(2, weight=1)
+    stop.grid(row=2, column=0, sticky=tk.W+tk.E)
+    button.grid(row=2, column=1, sticky=tk.W+tk.E)
+    start.grid(row=2, column=2, sticky=tk.W+tk.E)
     main_dialog.pack()
     clock.tick()
     pygame.display.flip()
