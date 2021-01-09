@@ -42,7 +42,7 @@ class Loaf(Still):
 
 class Boat(Still):
     GRID_SIZE = (5, 5)
-    CELLS = [(-1, -1), (-1, 0),
+    CELLS = [(-1, 1), (-1, 0),
              (0, -1), (0, 1),
              (1, 0)]
 

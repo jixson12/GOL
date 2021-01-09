@@ -49,6 +49,7 @@ def main():
     pygame.display.set_caption("Game of Life")
     clock = pygame.time.Clock()
     world = Grid(WORLD_SIZE)
+    shadow_world = Grid(WORLD_SIZE, shadow=True)
     # world.init_glider()
 
     # Init tk
@@ -71,10 +72,10 @@ def main():
         pattern = pat_var.get()
         x_ofst = int(x_var.get())
         y_ofst = int(y_var.get())
-        flipped = bool(flip_var.get())
+        flipped = flip_var.get()
         degrees = deg_var.get()
         print(f'Place {pattern} at offset ({x_ofst}:{y_ofst}); rotation {degrees}; flipped {flipped}')
-        world.init_pattern(PATTERNS[pat_var.get()], x_offset=(WORLD_SIZE / 2) - x_ofst,
+        world.init_pattern(PATTERNS[pat_var.get()], x_offset=(WORLD_SIZE / 2) + x_ofst,
                            y_offset=(WORLD_SIZE / 2) + y_ofst, rotation=degrees, flipped=flipped)
 
     root = tk.Tk()
@@ -92,8 +93,10 @@ def main():
     y_field = tk.Entry(main_dialog, width=3, textvariable=y_var)
     y_field.insert(0, 0)
     y_field.grid(row=0, column=3)
-    flip_var = tk.StringVar(main_dialog, 'False')
-    flip_radio = tk.Radiobutton(main_dialog, text='Flipped', variable=flip_var, value='True')
+
+    flip_var = tk.BooleanVar()
+    flip_var.set(False)
+    flip_radio = tk.Checkbutton(main_dialog, text='Flipped', variable=flip_var)
     flip_radio.grid(row=0, column=4)
 
     tk.Label(main_dialog, text='Pattern: ').grid(row=1, column=0)
@@ -133,9 +136,8 @@ def main():
                 quit_callback()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
-                # Pivoted because origin is the top left corner
-                target_y = math.floor(pos_x / (margin + c_width))
-                target_x = math.floor(pos_y / (margin + c_height))
+                target_x = math.floor(pos_x / (margin + c_width))
+                target_y = math.floor(pos_y / (margin + c_height))
                 world.flip(target_x, target_y)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -155,21 +157,26 @@ def main():
                 hl_idx = (margin * j) + (c_width * j)
                 pygame.draw.line(screen, GREY, [0, hl_idx + (margin / 2.0)], [w_width, hl_idx + (margin / 2.0)], margin)
                 color = GREEN if run else RED
+                if i == WORLD_SIZE / 2 or j == WORLD_SIZE / 2:
+                    color = WHITE
                 if world.get(i, j):
                     color = BLACK
+                if shadow_world.get(i, j):
+                    shade = 6 - shadow_world.get(i, j)
+                    color = (shade * 50, shade * 50, shade * 50)
                 pygame.draw.rect(screen, color,
-                                 [(margin + c_width) * j + margin,
-                                  (margin + c_height) * i + margin,
+                                 [(margin + c_width) * i + margin,
+                                  (margin + c_height) * j + margin,
                                   c_width, c_height])
 
         if run:
-            world.get_next_state()
+            world.get_next_state(shadow_world)
         try:
             main_dialog.update()
         except:
             print("dialog error")
 
-        clock.tick(6)
+        clock.tick(60)
         pygame.display.flip()
 
     pygame.quit()
